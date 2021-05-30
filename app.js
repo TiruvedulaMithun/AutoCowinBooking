@@ -24,16 +24,20 @@ function startNodeApp(bookingDate, selectedDistrict, selectedState, beneficiary,
     return new Promise(async function (resolve, reject) {
         try {
             // beneficiary = await getBeneficiaries(token);
+            var vaccineTypeSpecified = false;
+            var vaccineType = null;
             if (beneficiary['dose1_date'] == "" && beneficiary['dose2_date'] == "") {
                 beneficiary['TM_TYPE'] = 0;
             } else if (beneficiary['dose2_date'] == "") {
                 beneficiary['TM_TYPE'] = 1;
+                vaccineTypeSpecified = true;
+                vaccineType = beneficiary['vaccine']
             } else {
                 return reject("Beneficiary already has 2 doses.");
             }
             var age = parseInt(new Date().getFullYear()) - parseInt(beneficiary['birth_year']);
             beneficiary['TM_AGE'] = age;
-            console.log("beneficiary selected needs dose ", (beneficiary['TM_TYPE'] + 1), "AGE: ", age)
+            console.log("beneficiary selected needs dose ", (beneficiary['TM_TYPE'] + 1), "AGE: ", age, "Type: ", vaccineTypeSpecified, vaccineType)
             // console.log("IS CENTER AND SLOT OKAY? (press sl number of slot for yes, n for no).")
             var datesAll = [];
             if (bookingDate == "thisWeek") {
@@ -45,16 +49,17 @@ function startNodeApp(bookingDate, selectedDistrict, selectedState, beneficiary,
 
             for (var j = 0; j < datesAll.length; j++) {
                 var date = datesAll[j];
-                var allAppointments = await getCalendar(token, SEARCH_BY_PIN, null, date)
+                var allAppointments = await getCalendar(token, SEARCH_BY_PIN, null, date, vaccineTypeSpecified, vaccineType)
+                console.log("110", )
                 var resp = await getAvailableCenter(SEARCH_BY_PIN, null, date, beneficiary, token, allAppointments, captcha);
                 if(resp) return resolve(resp);
-                await sleep(API_DELAY_IN_MS);
+                // await sleep(API_DELAY_IN_MS);
                 // allAppointments.push(calPromise);
             }
 
 
             // var allResults = await Promise.all(allAppointments);
-            return resolve(true);
+            return resolve(false);
         } catch (err) {
             return reject(err);
         }
@@ -81,7 +86,7 @@ function getBeneficiaries(token) {
     });
 }
 
-function getCalendar(token, byPin, pin, date) {
+function getCalendar(token, byPin, pin, date, vaccineTypeSpecified, vaccineType) {
     return new Promise(async function (resolve, reject) {
         try {
             // var todayFormatted = getToday();
@@ -89,7 +94,13 @@ function getCalendar(token, byPin, pin, date) {
             if (!byPin) {
                 getCalendarUrl = 'https://cdn-api.co-vin.in/api/v2/appointment/sessions/calendarByDistrict?district_id=294&date=' + date
             }
+
+            if (vaccineTypeSpecified) {
+                getCalendarUrl = getCalendarUrl + "&vaccine=" + vaccineType
+            }
+            console.log("getCalendarUrlgetCalendarUrlgetCalendarUrl", getCalendarUrl);
             var data = await makeApiCall("GET", getCalendarUrl, null, token)
+            console.log("getCalendarUrlgetCalendarUrldatadata");
             return resolve(data);
         } catch (err) {
             return reject(err);
@@ -102,6 +113,8 @@ function getAvailableCenter(byPin, pin, date, beneficiary, token, allAppointment
         try {
             var centers = allAppointments['centers'];
             var slot = null;
+            console.log("Lookie 1", centers.length)
+
             for (var j = 0; j < centers.length; j++) {
                 var center = centers[j];
                 var sessions = center['sessions'];
@@ -122,11 +135,15 @@ function getAvailableCenter(byPin, pin, date, beneficiary, token, allAppointment
                             continue;
                         }
 
+                        console.log("Lookie 1")
+
+
                         var res = await bookAppointment(center, session, beneficiary, slot, token, captcha);
                         return resolve(res);
                     }
                 }
             }
+            console.log("NO APPTS FOUND")
             return resolve(false);
         } catch (err) {
             return reject(err);
@@ -165,6 +182,7 @@ function getCaptcha(token) {
 function bookAppointment(center, session, beneficiary, slot, token, captcha) {
     return new Promise(async function (resolve, reject) {
         try {
+
             var scheduleUrl = 'https://cdn-api.co-vin.in/api/v2/appointment/schedule';
             var dose = 1;
             if (beneficiary["vaccination_status"] == "Partially Vaccinated") {
@@ -185,7 +203,7 @@ function bookAppointment(center, session, beneficiary, slot, token, captcha) {
             var data = await makeApiCall("POST", scheduleUrl, params, token)
             console.log("BOOKED ", data)
             APPOINTMENT_FOUND = false;
-            return resolve(true);
+            return resolve(data);
         } catch (err) {
             console.log(err);
             APPOINTMENT_FOUND = false;
@@ -217,17 +235,27 @@ function makeApiCall(method, url, params, token) {
         try {
             var config = {
                 method: method,
+                withCredentials: true,
                 headers: {
+                    "authority": 'cdn-api.co-vin.in',
+                    "method": 'GET',
+                    "path": '/api/v2/appointment/sessions/calendarByDistrict?district_id=270&date=23-06-2021&vaccine=COVISHIELD',
+                    "scheme": 'https',
+                    "accept": 'application/json, text/plain, */*',
+                    "accept-encoding": 'gzip, deflate, br',
+                    "accept-language": 'en-US,en;q=0.9',
+                    "dnt": '1',
+                    "if-none-match": 'W/"6951-IQLTGenCdbaESJhEAouP4caqBIc"',
+                    "sec-ch-ua": '" Not A;Brand";v="99", "Chromium";v="90", "Google Chrome";v="90"',
+                    "sec-ch-ua-mobile": '?0',
+                    "sec-fetch-dest": 'empty',
+                    "sec-fetch-mode": 'cors',
+                    "sec-fetch-site": 'cross-site',
+                    "user-agent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36',
                     'origin': 'https://selfregistration.cowin.gov.in',
                     'referer': 'https://selfregistration.cowin.gov.in/',
-                    'sec-ch-ua': '" Not A;Brand";v="99", "Chromium";v="90", "Google Chrome";v="90"',
-                    'sec-ch-ua-mobile': '?0',
-                    'sec-fetch-dest': 'empty',
-                    'sec-fetch-mode': 'cors',
-                    'sec-fetch-site': 'cross-site',
-                    'sec-gpc': '1',
-                    'dnt': '1',
-                    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36',
+                    // 'sec-gpc': '1',
+                    // 'dnt': '1',
                     'Authorization': 'Bearer ' + token
                 }
             };
@@ -243,6 +271,7 @@ function makeApiCall(method, url, params, token) {
             axios(config).then(function (response) {
                 var statusCode = response.status;
                 var data = response.data;
+                console.log("AXIS", statusCode)
                 if (statusCode < 199 || statusCode > 299) {
                     console.log("ERR")
                     return reject({ data, statusCode });
@@ -314,21 +343,25 @@ app.post('/makeBooking', async function (req, res) {
         console.log("BOOKING ERROR ", err)
         return res.status(500).json({error: err});
     }
-    return res.json(resp);
+    if(resp == false){
+        return res.json({message: "No slots found, try again later."});
+    } else {
+        return res.json({message: "Booked successfuly.", ...resp});
+    }
 })
 
 app.use(express.static(__dirname + '/public'));
 
-const server = app.listen(0, () => {
+const server = app.listen(880, () => {
     APP_PORT = server.address().port;
     console.log(`Example app listening at http://localhost:${APP_PORT}`)
-    chromeLauncher.launch({
-        startingUrl: "http://localhost:"+APP_PORT+"/index.html",
-        // chromeFlags: ["--disable-web-security", "--disable-popup-blocking", "--allow-running-insecure-content"]
-    }).then(chrome => {
-        LAUNCHED_BROWSER = chrome;
-        // console.log(`Chrome debugging port running on ${chrome.port}`, chrome);
-    });
+    // chromeLauncher.launch({
+    //     startingUrl: "http://localhost:"+APP_PORT+"/index.html",
+    //     // chromeFlags: ["--disable-web-security", "--disable-popup-blocking", "--allow-running-insecure-content"]
+    // }).then(chrome => {
+    //     LAUNCHED_BROWSER = chrome;
+    //     // console.log(`Chrome debugging port running on ${chrome.port}`, chrome);
+    // });
 })
 
 // var TOKEN = readline.question(`Enter bearer token:`)
