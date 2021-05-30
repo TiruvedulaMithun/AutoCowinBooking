@@ -136,7 +136,7 @@ function getAvailableCenter(byPin, pin, date, beneficiary, token, allAppointment
                         }
 
                         console.log("Lookie 1")
-
+                        slot = session['slots'][0];
 
                         var res = await bookAppointment(center, session, beneficiary, slot, token, captcha);
                         return resolve(res);
