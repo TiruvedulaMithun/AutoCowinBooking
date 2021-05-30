@@ -12,8 +12,8 @@ Follow these steps to get started.
 ## Download the distribution.
 Download the distribution file and double click to run it.
 
-Windows 64 Bit - [Here](https://github.com/TiruvedulaMithun/AutoCowinBooking/blob/main/build/cowin-win.exe?raw=true).
-MacOS 64 Bit - [Here](https://github.com/TiruvedulaMithun/AutoCowinBooking/blob/main/build/cowin-macos?raw=true).
+Windows 64 Bit - [Here](https://github.com/TiruvedulaMithun/AutoCowinBooking/releases/download/2/cowin-macos).
+MacOS 64 Bit - [Here](https://github.com/TiruvedulaMithun/AutoCowinBooking/releases/download/2/cowin-win.exe).
 
 The application will now ask you for a token.
 
