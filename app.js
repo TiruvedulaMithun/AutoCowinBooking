@@ -352,16 +352,16 @@ app.post('/makeBooking', async function (req, res) {
 
 app.use(express.static(__dirname + '/public'));
 
-const server = app.listen(880, () => {
+const server = app.listen(0, () => {
     APP_PORT = server.address().port;
     console.log(`Example app listening at http://localhost:${APP_PORT}`)
-    // chromeLauncher.launch({
-    //     startingUrl: "http://localhost:"+APP_PORT+"/index.html",
-    //     // chromeFlags: ["--disable-web-security", "--disable-popup-blocking", "--allow-running-insecure-content"]
-    // }).then(chrome => {
-    //     LAUNCHED_BROWSER = chrome;
-    //     // console.log(`Chrome debugging port running on ${chrome.port}`, chrome);
-    // });
+    chromeLauncher.launch({
+        startingUrl: "http://localhost:"+APP_PORT+"/index.html",
+        // chromeFlags: ["--disable-web-security", "--disable-popup-blocking", "--allow-running-insecure-content"]
+    }).then(chrome => {
+        LAUNCHED_BROWSER = chrome;
+        // console.log(`Chrome debugging port running on ${chrome.port}`, chrome);
+    });
 })
 
 // var TOKEN = readline.question(`Enter bearer token:`)
