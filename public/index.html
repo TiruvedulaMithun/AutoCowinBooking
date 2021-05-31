@@ -39,6 +39,11 @@
             <input type="radio" id="nextWeek" name="bookingDate" value="nextWeek">
             <label for="nextWeek">Next Week</label><br><br>
 
+            <input type="radio" id="today" name="startDate" value="today" checked>
+            <label for="today">Today</label><br>
+            <input type="radio" id="tomorrow" name="startDate" value="tomorrow">
+            <label for="tomorrow">Tomorrow</label><br><br>
+
             <input type="radio" id="bookingType" name="bookingTypeGroup" value="bookingType" disabled checked>
             <label for="bookingType">Instant</label><br><br>
             
@@ -175,16 +180,17 @@
             var beneficiary = ALL_BENEFECIARIES[beneficiaryId];
             var bookingDate = document.querySelector('input[name="bookingDate"]:checked').value;
             var captcha = document.getElementById("cowinCaptcha").value;
+            var startDate = document.querySelector('input[name="startDate"]:checked').value;
             
 
-            console.log("RESS", { selectedState, selectedDistrict, token, bookingDate, beneficiary, captcha })
+            console.log("RESS", { selectedState, selectedDistrict, token, bookingDate, beneficiary, captcha, startDate })
             var res = await fetch('/makeBooking', {
                 method: "POST",
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ selectedState, selectedDistrict, token, bookingDate, beneficiary, captcha })
+                body: JSON.stringify({ selectedState, selectedDistrict, token, bookingDate, beneficiary, captcha, startDate })
             });
             var isValid = validateResponse(res);
             if (!isValid) {

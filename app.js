@@ -20,7 +20,7 @@ var ABOVE_45_ONLY = false;
 var TEMP_SVG_PATH = './public/captcha.svg'
 var LAUNCHED_BROWSER = null;
 
-function startNodeApp(bookingDate, selectedDistrict, selectedState, beneficiary, token, captcha) {
+function startNodeApp(bookingDate, selectedDistrict, selectedState, beneficiary, token, captcha, startDate) {
     return new Promise(async function (resolve, reject) {
         try {
             // beneficiary = await getBeneficiaries(token);
@@ -41,9 +41,9 @@ function startNodeApp(bookingDate, selectedDistrict, selectedState, beneficiary,
             // console.log("IS CENTER AND SLOT OKAY? (press sl number of slot for yes, n for no).")
             var datesAll = [];
             if (bookingDate == "thisWeek") {
-                datesAll.push(getToday(false))
+                datesAll.push(getToday(false, startDate))
             } else {
-                datesAll.push(getToday(true))
+                datesAll.push(getToday(true, startDate))
             }
             console.log("DATESSS ", datesAll)
 
@@ -213,8 +213,11 @@ function bookAppointment(center, session, beneficiary, slot, token, captcha) {
     })
 }
 
-function getToday(nextWeek) {
+function getToday(nextWeek, startDate) {
     var now = new Date()
+    if(startDate == "tomorrow"){
+        now.setDate(now.getDate() + 1);
+    } 
     if (nextWeek) {
         now.setDate(now.getDate() + 7);
     }
@@ -335,10 +338,13 @@ app.post('/makeBooking', async function (req, res) {
     if (!body.hasOwnProperty("captcha") || body["captcha"] == '') {
         return res.status(400).json({ error: 'Illegal param "captcha"' })
     }
-    var { bookingDate, selectedDistrict, selectedState, beneficiary, token, captcha } = body;
+    if (!body.hasOwnProperty("startDate") || body["startDate"] == '') {
+        return res.status(400).json({ error: 'Illegal param "startDate"' })
+    }
+    var { bookingDate, selectedDistrict, selectedState, beneficiary, token, captcha, startDate } = body;
     var resp;
     try{
-        resp = await startNodeApp(bookingDate, selectedDistrict, selectedState, beneficiary, token, captcha);
+        resp = await startNodeApp(bookingDate, selectedDistrict, selectedState, beneficiary, token, captcha, startDate);
     }catch(err){
         console.log("BOOKING ERROR ", err)
         return res.status(500).json({error: err});
