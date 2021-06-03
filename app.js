@@ -49,7 +49,7 @@ function startNodeApp(bookingDate, selectedDistrict, selectedState, beneficiary,
 
             for (var j = 0; j < datesAll.length; j++) {
                 var date = datesAll[j];
-                var allAppointments = await getCalendar(token, SEARCH_BY_PIN, null, date, vaccineTypeSpecified, vaccineType)
+                var allAppointments = await getCalendar(token, SEARCH_BY_PIN, null, date, vaccineTypeSpecified, vaccineType, selectedDistrict, selectedState)
                 console.log("110", )
                 var resp = await getAvailableCenter(SEARCH_BY_PIN, null, date, beneficiary, token, allAppointments, captcha);
                 if(resp) return resolve(resp);
@@ -86,13 +86,13 @@ function getBeneficiaries(token) {
     });
 }
 
-function getCalendar(token, byPin, pin, date, vaccineTypeSpecified, vaccineType) {
+function getCalendar(token, byPin, pin, date, vaccineTypeSpecified, vaccineType, selectedDistrict, selectedState) {
     return new Promise(async function (resolve, reject) {
         try {
             // var todayFormatted = getToday();
             var getCalendarUrl = 'https://cdn-api.co-vin.in/api/v2/appointment/sessions/calendarByPin?pincode=' + pin + '&date=' + date
             if (!byPin) {
-                getCalendarUrl = 'https://cdn-api.co-vin.in/api/v2/appointment/sessions/calendarByDistrict?district_id=294&date=' + date
+                getCalendarUrl = 'https://cdn-api.co-vin.in/api/v2/appointment/sessions/calendarByDistrict?district_id='+selectedDistrict+'&date=' + date
             }
 
             if (vaccineTypeSpecified) {
