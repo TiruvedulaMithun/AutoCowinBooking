@@ -90,7 +90,7 @@
 
         function validateResponse(res) {
             // TODO resp validation
-            return true;
+            return {isValid: true, message:""};
         }
 
         async function startApp() {
@@ -111,7 +111,8 @@
 
         async function getStates() {
             var res = await fetch('https://cdn-api.co-vin.in/api/v2/admin/location/states');
-            var isValid = validateResponse(res);
+            var {isValid, message} = validateResponse(res);
+            console.log("isValid, messageisValid, message", isValid, message);
             if (isValid) {
                 var json = await res.json();
                 return json
@@ -120,7 +121,7 @@
 
         async function getDistricts(stateId) {
             var res = await fetch('https://cdn-api.co-vin.in/api/v2/admin/location/districts/' + stateId);
-            var isValid = validateResponse(res);
+            var {isValid, message} = validateResponse(res);
             if (isValid) {
                 var json = await res.json();
                 return json
@@ -139,7 +140,7 @@
                 },
                 body: JSON.stringify({token})
             });
-            var isValid = validateResponse(res);
+            var {isValid, message} = validateResponse(res);
             if (!isValid) {
                 // TODO
                 return
@@ -169,6 +170,7 @@
         }
 
         async function submitDetails() {
+            bookingResponse.innerHTML = "";
             var token = document.getElementById("cowinToken").value;
             // var token = document.getElementById("token").value;
             var e = document.getElementById("state");
@@ -192,7 +194,7 @@
                 },
                 body: JSON.stringify({ selectedState, selectedDistrict, token, bookingDate, beneficiary, captcha, startDate })
             });
-            var isValid = validateResponse(res);
+            var {isValid, message} = validateResponse(res);
             if (!isValid) {
                 // TODO
                 return

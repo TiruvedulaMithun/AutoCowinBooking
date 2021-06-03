@@ -139,7 +139,9 @@ function getAvailableCenter(byPin, pin, date, beneficiary, token, allAppointment
                         slot = session['slots'][0];
 
                         var res = await bookAppointment(center, session, beneficiary, slot, token, captcha);
-                        return resolve(res);
+                        if(res != "tryAgain"){
+                            return resolve(res);
+                        }
                     }
                 }
             }
@@ -207,7 +209,11 @@ function bookAppointment(center, session, beneficiary, slot, token, captcha) {
         } catch (err) {
             console.log(err);
             APPOINTMENT_FOUND = false;
-            return reject(err);
+            if(err.hasOwnProperty("statusCode") && err['statusCode'] == 409){
+                return resolve("tryAgain")
+            } else {
+                return reject(err);
+            }
         }
 
     })
@@ -289,7 +295,7 @@ function makeApiCall(method, url, params, token) {
                     data = response.data;
                     if (statusCode == 401) {
                         console.log("Bearer token illegal or expired.");
-                        process.exit(1);
+                        return reject({data: "Bearer token illegal or expired.", statusCode: 400});
                     }
                 } else if (error.request) {
                     data = error.request;
@@ -314,8 +320,16 @@ app.post('/getBenefeciaries', async function (req, res) {
     }
 
     var { token } = body;
-    var bene = await getBeneficiaries(token);
-    var captcha = await getCaptcha(token);
+    var bene;
+    var captcha;
+    try{
+        bene = await getBeneficiaries(token);
+        captcha = await getCaptcha(token);
+    }catch(err){
+        console.log("BOOKING ERROR ", err)
+        return res.status(500).json({error: err});
+    }
+    
     return res.json({beneficiaries: bene, ...captcha});
 });
 
